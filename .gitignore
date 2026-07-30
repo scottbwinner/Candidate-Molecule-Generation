@@ -1,0 +1,32 @@
+# --- Data ---
+data/*
+!data/.gitkeep
+
+
+# TensorBoard logs (regenerable, can grow large over many runs)
+runs/
+logs/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Environments ---
+.env
+venv/
+.venv/
+env/
+
+# --- Editor / IDE ---
+.vscode/
+.idea/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+Desktop.ini
