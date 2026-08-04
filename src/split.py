@@ -33,13 +33,17 @@ def scaffold_split(smiles_list: List[str], holdout_fraction: float, random_state
 
     no_rings = groups.pop("", [])
     print("No rings: ", len(no_rings))
-    train_no_rings, holdout_no_rings = train_test_split(no_rings, test_size=holdout_fraction, random_state=random_state)
+    if len(no_rings) == 0:
+        train_no_rings, holdout_no_rings = [], []
+    else:
+        train_no_rings, holdout_no_rings = train_test_split(no_rings, test_size=holdout_fraction, random_state=random_state)
 
 
     # All other molecules need to be split such that they stay in the same set with their scaffold.
     
     scaffolds = list(groups.keys())
-    random.shuffle(scaffolds, random_state=random_state)
+    random.seed(random_state)
+    random.shuffle(scaffolds)
 
     total_molecules = sum(len(v) for v in groups.values())
     holdout_count = 0
