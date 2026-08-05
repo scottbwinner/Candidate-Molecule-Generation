@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 class Zinc250kDataset(Dataset):
     def __init__(self, encoded_smiles):
         """
-        Args:
+        Parameters:
             encoded_smiles: encoded and padded SMILES sequences as tensor of shape (N, max_len) dtype torch.long
         """
         self.encoded_smiles = encoded_smiles

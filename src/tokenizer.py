@@ -2,10 +2,6 @@
 SMILES tokenization: two interchangeable strategies (character-level and
 atom-level), plus vocabulary construction and encode/decode built on top
 of whichever one you pass in.
-
-Design: char_tokenize and atom_tokenize share the signature
-    (smiles: str) -> List[str]
-build_vocab/encode/decode just take a tokenize_fn argument to determine the active strategy.
 """
 
 import re
@@ -32,6 +28,11 @@ def char_tokenize(smiles: str) -> List[str]:
     Naive character-level tokenization: every character is its own token.
 
     Does not keep multi-character atoms (Cl, Br) or bracket expressions of atoms ([C@@H]) in their own tokens.
+
+    Parameters:
+        smiles: SMILES string to be tokenized
+    Returns:
+        tokens: List of tokens
     """
     tokens = list(smiles)
     return tokens
@@ -42,6 +43,11 @@ def atom_tokenize(smiles: str) -> List[str]:
     Atom-level tokenization using the Schwaller et al. regex: bracket
     expressions of atoms ([C@@H]) and two-letter halogens (Cl, Br) come out as single
     tokens instead of being split character-by-character.
+
+    Parameters:
+        smiles: SMILES string to be tokenized
+    Returns:
+        tokens: List of tokens
     """
     tokens = re.findall(SMI_REGEX_PATTERN, smiles)
     assert "".join(tokens) == smiles
@@ -55,6 +61,10 @@ def build_vocab(
 ) -> Tuple[Dict[str, int], Dict[int, str]]:
     """
     Scan every SMILES string in smiles_list and build the unique vocabulary of tokens.
+
+    Parameters:
+        smiles_list: List of SMILES strings
+        tokenize_fn: Function to be used for tokenizing individual SMILES strings
 
     Returns (token2idx, idx2token), with SPECIAL_TOKENS assigned first
     (so PAD_TOKEN = index 0, matching nn.Embedding's padding_idx convention).
@@ -95,6 +105,15 @@ def encode(
     """
     Tokenizes and encodes SMILES string. 
     If SMILES string has more tokens than max_len, returns None.
+
+    Parameters:
+        smiles: SMILES string to be tokenized and encoded
+        tokenize_fn: Function to be used for tokenizing SMILES string
+        token2idx: Dictionary mapping tokens to their corresponding index
+        max_len: Maximum length a tokenized string is allowed to have
+
+    Returns:
+        List of indices correpsonding to the tokenized SMILES string.
     """
 
     tokens = tokenize_fn(smiles)
@@ -114,6 +133,13 @@ def decode(indices: List[int], idx2token: Dict[int, str]) -> str:
     """
     Inverse of encode: map ids back to tokens, strips
     special tokens, join back into a single SMILES string.
+
+    Parameters:
+        indices: List of indices corresponding to a tokenized SMILES string
+        idx2token: Dictionary mapping indices to their corresponding token
+    
+    Returns:
+        Decoded SMILES string
     """
 
     tokens = [idx2token[index] for index in indices]
