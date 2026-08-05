@@ -66,6 +66,12 @@ def evaluate_loss(model, eval_loader, criterion, device):
         return average_loss
 
 def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout, batch_size, max_norm):
+    """
+    Parameters:
+
+
+    Run via: python -m src.train --parameter1 value1 --parameter2 value2 ...
+    """
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print("Using CUDA")
@@ -152,7 +158,8 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
         "hidden_dim": hidden_dim,
         "num_layers": num_layers,
         "pad_idx": pad_idx,
-        "eval_loss": best_eval_loss
+        "eval_loss": best_eval_loss,
+        "token2idx": token2idx
     }
     exp_dir.mkdir(parents=True, exist_ok=True)
     torch.save(best_checkpoint, exp_dir / f"{full_model_name}.th")

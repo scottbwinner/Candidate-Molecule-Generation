@@ -1,0 +1,61 @@
+import torch
+from pathlib import Path
+import json
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent  # src/sample.py -> src/ -> project root
+data_dir = PROJECT_ROOT / "data" / "processed" / "char_tokenized"
+
+from src.model import LSTMModel
+from src.tokenizer import START_TOKEN, decode
+
+def generate_molecules(num_samples, model_path, batch_size, device, temperature):
+    model_params = torch.load(model_path, map_location=device)
+    model = LSTMModel(
+        vocab_size=model_params["vocab_size"],
+        embed_dim=model_params["embed_dim"],
+        pad_idx=model_params["pad_idx"],
+        hidden_dim=model_params["hidden_dim"],
+        num_layers=model_params["num_layers"],
+        dropout=0.0,
+    )
+    model.load_state_dict(model_params["model_state_dict"])
+    model.to(device)
+    model.eval()
+
+    idx2token = {idx: token for token, idx in model_params["token2idx"].items()}
+
+    with open(data_dir / "metadata.json", 'r', encoding='utf-8') as file:
+        metadata = json.load(file)
+    max_len = metadata['max_len']
+
+    generated_molecules = []
+    with torch.no_grad():
+        remaining = num_samples
+        while remaining > 0:
+            current_batch_size = min(batch_size, remaining)
+            # Fill a tensor with batch_size rows and 1 column with the start token. 
+            # dtype is torch.long and not int because any tensor headed to Embedding as indices or CrossEntropyLoss as a target need to be torch.long
+            molecules = torch.full((current_batch_size, max_len), fill_value=model_params["pad_idx"], dtype=torch.long, device=device)
+            molecules[:, 0] = model_params['token2idx'][START_TOKEN]
+            hidden = model.init_hidden(batch_size=current_batch_size, device=device)
+            current_token = molecules[:, 0:1]
+            for i in range(max_len - 1):
+                # Call forward on model with hidden state and current_token to get logits for the next token
+                logits, hidden = model(current_token, hidden) # logits in shape (current_batch_size, 1, vocab_size)
+                # transform logits to (current_batch_size, vocab_size)
+                logits = logits[:, -1, :]
+                # turn logits to probabilities
+                probs = torch.softmax(logits / temperature, dim=-1)
+                # Sample next token probability distribution to choose next token
+                next_token = torch.multinomial(probs, num_samples=1)
+                # Set next token 
+                molecules[:, i+1] = next_token.squeeze(-1)
+                # Increment current token for next loop
+                current_token = next_token
+            # Decode generated molecules and add them to generated_molecules
+            for molecule in molecules:
+                generated_molecules.append(decode(molecule.tolist(), idx2token))
+
+            remaining -= current_batch_size
+
+    return generated_molecules
