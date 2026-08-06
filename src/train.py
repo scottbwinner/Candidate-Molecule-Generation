@@ -9,7 +9,7 @@ import argparse
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent  # src/train.py -> src/ -> project root
-data_dir = PROJECT_ROOT / "data" / "processed" / "char_tokenized"
+data_dir = PROJECT_ROOT / "data" / "processed"
 
 from src.dataset import Zinc250kDataset
 from src.model import LSTMModel
@@ -110,7 +110,7 @@ def evaluate_loss(model, val_loader, criterion, device):
 
 
 
-def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout, batch_size, max_norm):
+def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout, batch_size, max_norm, tokenization):
     """
     This function orchestrates the entire training process for an LSTM model.
 
@@ -124,6 +124,7 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
         dropout: dropout that is only applied between stacked LSTM layers, forced to 0 when num_layers=1
         batch_size: Batch size to parse through DataLoader objects.
         max_norm: The maximum allowed norm of the combined gradient across all parameters
+        tokenization: Select either character tokenization or atom tokenization ["char", "atom"]
 
 
     Run via: python -m src.train --parameter1 value1 --parameter2 value2 ...
@@ -139,16 +140,23 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
         print("CUDA not available, using CPU")
         device = torch.device("cpu")
 
+    if tokenization == "char":
+        output_subdir = "char_tokenization"
+        max_len = 68
+    else:
+        output_subdir = "atom_tokenization"
+        max_len = 59
+
     # Directory with timestamp to save tensorboard logs and model checkpoints
     full_model_name = f"{model_name}_{datetime.now().strftime('%m%d_%H%M%S')}"
     log_dir = PROJECT_ROOT / "logs" / full_model_name
     exp_dir = PROJECT_ROOT / "models"
     logger = tb.SummaryWriter(log_dir)
 
-    training_tensor = torch.load(data_dir / "training_tensor.pt")
-    holdout_tensor = torch.load(data_dir / "holdout_tensor.pt")
+    training_tensor = torch.load(data_dir / output_subdir / "training_tensor.pt")
+    holdout_tensor = torch.load(data_dir / output_subdir / "holdout_tensor.pt")
 
-    with open(data_dir / "metadata.json", 'r', encoding='utf-8') as file:
+    with open(data_dir / output_subdir / "metadata.json", 'r', encoding='utf-8') as file:
         metadata = json.load(file)
 
     token2idx = metadata['token2idx']
@@ -217,7 +225,9 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
         "num_layers": num_layers,
         "pad_idx": pad_idx,
         "val_loss": best_val_loss,
-        "token2idx": token2idx
+        "token2idx": token2idx,
+        "max_len": max_len,
+        "tokenization": tokenization
     }
     exp_dir.mkdir(parents=True, exist_ok=True)
     torch.save(best_checkpoint, exp_dir / f"{full_model_name}.th")
@@ -234,6 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("--dropout", type=float, default=0.2)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--max_norm", type=float, default=1.0)
+    parser.add_argument("--tokenization", type=str, default="char", choices=["char", "atom"])
     args = parser.parse_args()
 
     main(

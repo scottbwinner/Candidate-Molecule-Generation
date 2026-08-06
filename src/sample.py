@@ -3,7 +3,6 @@ from pathlib import Path
 import json
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent  # src/sample.py -> src/ -> project root
-data_dir = PROJECT_ROOT / "data" / "processed" / "char_tokenized"
 
 from src.model import LSTMModel
 from src.tokenizer import START_TOKEN, decode
@@ -37,9 +36,7 @@ def generate_molecules(num_samples, model_path, batch_size, device, temperature)
 
     idx2token = {idx: token for token, idx in model_params["token2idx"].items()}
 
-    with open(data_dir / "metadata.json", 'r', encoding='utf-8') as file:
-        metadata = json.load(file)
-    max_len = metadata['max_len']
+    max_len = model_params['max_len']
 
     generated_molecules = []
     with torch.no_grad():

@@ -22,3 +22,10 @@ Parameters:
     - Scaffold Holdout Rate: 0.089406
     - Mean QED: 0.762936
     - Median QED: 0.789328
+
+
+To try:
+- Leasrning Rate decay
+- bigger hidden_dim
+- bigger layers?
+- atom level tokenization
