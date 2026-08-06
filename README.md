@@ -10,6 +10,7 @@ Parameters:
   - embed_dim: 128
   - hidden_dim: 256
   - num_layers: 2
+  - dropout: 0.2
   - batch_size: 32
   - max_norm: 1
 

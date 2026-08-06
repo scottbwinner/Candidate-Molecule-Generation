@@ -256,5 +256,6 @@ if __name__ == "__main__":
         num_layers=args.num_layers, 
         dropout=args.dropout, 
         batch_size=args.batch_size, 
-        max_norm=args.max_norm
+        max_norm=args.max_norm,
+        tokenization=args.tokenization
     )
