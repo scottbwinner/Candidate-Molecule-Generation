@@ -141,10 +141,10 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
         device = torch.device("cpu")
 
     if tokenization == "char":
-        output_subdir = "char_tokenization"
+        output_subdir = "char_tokenized"
         max_len = 68
     else:
-        output_subdir = "atom_tokenization"
+        output_subdir = "atom_tokenized"
         max_len = 59
 
     # Directory with timestamp to save tensorboard logs and model checkpoints
