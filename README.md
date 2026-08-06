@@ -15,7 +15,10 @@ Parameters:
 
   Generation Results (More in results folder):
     - Temperature: 0.7
-    - Validity Rate: 0.9830
-    - Uniqueness Rate: 1.0
-    - Novelty Rate: .995931
-    - Scaffold Novelty Rate: 0.092065
+    - Validity Rate: 0.9802
+    - Uniqueness Rate: 0.999592
+    - Novelty Rate: 0.996938
+    - Scaffold Novelty Rate: 0.477648
+    - Scaffold Holdout Rate: 0.089406
+    - Mean QED: 0.762936
+    - Median QED: 0.789328
