@@ -13,6 +13,7 @@ Parameters:
   - dropout: 0.2
   - batch_size: 32
   - max_norm: 1
+  - lr_decay_factor: None
 
 Generation Results (More in results folder):
   - Temperature: 0.7
@@ -37,6 +38,7 @@ Parameters:
   - dropout: 0.2
   - batch_size: 32
   - max_norm: 1
+  - lr_decay_factor: None
 
 Generation Results (More in results folder)
   - Temperature: 0.7
@@ -48,8 +50,55 @@ Generation Results (More in results folder)
   - Mean QED: 0.764234
   - Median QED: 0.791075
 
-To try:
-- Learning Rate decay
-- bigger hidden_dim
-- bigger layers?
-- atom level tokenization
+**char_lstm_v2_0806_182319**
+Train Loss: 0.4842
+Validation Loss: 0.5206
+Parameters:
+  - Char Tokenization
+  - num_epochs: 100
+  - lr: 1e-3
+  - embed_dim: 128
+  - hidden_dim: 256
+  - num_layers: 2
+  - dropout: 0.2
+  - batch_size: 32
+  - max_norm: 1
+  - lr_decay_factor: 0.5
+  - lr_patience: 5
+
+Generation Results (More in results folder)
+  - Temperature: 0.7 (1 is more valid here, with a validty rate of .9522)
+  - Validity Rate: 0.9894
+  - Uniqueness Rate: 0.999394
+  - Novelty Rate: 0.996157
+  - Scaffold Novelty Rate: 0.438714
+  - Scaffold Holdout Rate: 0.079086
+  - Mean QED: 0.762419
+  - Median QED: 0.790997
+
+
+**char_lstm_v3**
+Train Loss: 0.4842
+Validation Loss: 0.5206
+Parameters:
+  - Char Tokenization
+  - num_epochs: 100
+  - lr: 1e-3
+  - embed_dim: 128
+  - hidden_dim: 256
+  - num_layers: 2
+  - dropout: 0.2
+  - batch_size: 32
+  - max_norm: 1
+  - lr_decay_factor: 0.5
+  - lr_patience: 5
+
+Generation Results (More in results folder)
+  - Temperature:
+  - Validity Rate:
+  - Uniqueness Rate:
+  - Novelty Rate:
+  - Scaffold Novelty Rate:
+  - Scaffold Holdout Rate:
+  - Mean QED:
+  - Median QED:

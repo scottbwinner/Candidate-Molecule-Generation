@@ -110,7 +110,7 @@ def evaluate_loss(model, val_loader, criterion, device):
 
 
 
-def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout, batch_size, max_norm, tokenization):
+def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout, batch_size, max_norm, tokenization, lr_decay_factor, lr_patience):
     """
     This function orchestrates the entire training process for an LSTM model.
 
@@ -125,6 +125,8 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
         batch_size: Batch size to parse through DataLoader objects.
         max_norm: The maximum allowed norm of the combined gradient across all parameters
         tokenization: Select either character tokenization or atom tokenization ["char", "atom"]
+        lr_decay_factor: Factor at which the learning rate will decay if no improvement after lr_patience epochs. By default is None, meaning there is no learning rate scheduler.
+        lr_patience: Number of epochs of no improvement until learning rate decays at factor lr_decay_factor
 
 
     Run via: python -m src.train --parameter1 value1 --parameter2 value2 ...
@@ -142,10 +144,8 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
 
     if tokenization == "char":
         output_subdir = "char_tokenized"
-        max_len = 68
     else:
         output_subdir = "atom_tokenized"
-        max_len = 59
 
     # Directory with timestamp to save tensorboard logs and model checkpoints
     full_model_name = f"{model_name}_{datetime.now().strftime('%m%d_%H%M%S')}"
@@ -159,6 +159,7 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
     with open(data_dir / output_subdir / "metadata.json", 'r', encoding='utf-8') as file:
         metadata = json.load(file)
 
+    max_len = metadata['max_len']
     token2idx = metadata['token2idx']
     vocab_size = len(token2idx)
     pad_idx = token2idx[PAD_TOKEN]
@@ -179,6 +180,13 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
     ).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    scheduler = None
+    if lr_decay_factor is not None:
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode='min', factor=lr_decay_factor, patience=lr_patience
+        )
+
     criterion = torch.nn.CrossEntropyLoss(ignore_index=pad_idx)
 
     best_state_dict = {}
@@ -200,15 +208,20 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
             device=device
         )
 
+        if scheduler is not None:
+            scheduler.step(average_val_loss)
+
         logger.add_scalar("train_loss", average_train_loss, epoch)
         logger.add_scalar("gradient_clipped_rate", gradient_clipped_rate, epoch)
         logger.add_scalar("val_loss", average_val_loss, epoch)
+        logger.add_scalar("learning_rate", optimizer.param_groups[0]['lr'], epoch)
 
         print(
             f"Epoch {epoch + 1:2d} / {num_epochs:2d}: "
             f"train_loss={average_train_loss:.4f} "
             f"gradient_clipped_rate={gradient_clipped_rate:.4f} "
             f"val_loss={average_val_loss:.4f} "
+            f"lr={optimizer.param_groups[0]['lr']:.4f} "
         )
 
         if (average_val_loss < best_val_loss):
@@ -227,7 +240,9 @@ def main(num_epochs, model_name, lr, embed_dim, hidden_dim, num_layers, dropout,
         "val_loss": best_val_loss,
         "token2idx": token2idx,
         "max_len": max_len,
-        "tokenization": tokenization
+        "tokenization": tokenization,
+        "lr_decay_factor": lr_decay_factor,
+        "lr_patience": lr_patience
     }
     exp_dir.mkdir(parents=True, exist_ok=True)
     torch.save(best_checkpoint, exp_dir / f"{full_model_name}.th")
@@ -245,6 +260,8 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--max_norm", type=float, default=1.0)
     parser.add_argument("--tokenization", type=str, default="char", choices=["char", "atom"])
+    parser.add_argument("--lr_decay_factor", type=float, default=None)
+    parser.add_argument("--lr_patience", type=int, default=5)
     args = parser.parse_args()
 
     main(
@@ -257,5 +274,7 @@ if __name__ == "__main__":
         dropout=args.dropout, 
         batch_size=args.batch_size, 
         max_norm=args.max_norm,
-        tokenization=args.tokenization
+        tokenization=args.tokenization,
+        lr_decay_factor=args.lr_decay_factor,
+        lr_patience=args.lr_patience
     )
