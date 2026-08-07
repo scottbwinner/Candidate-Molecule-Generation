@@ -77,15 +77,15 @@ Generation Results (More in results folder)
   - Median QED: 0.790997
 
 
-**char_lstm_v3**
-Train Loss: 0.4842
-Validation Loss: 0.5206
+**char_lstm_v3_0806_220850**
+Train Loss: 0.4588
+Validation Loss: 0.5135
 Parameters:
   - Char Tokenization
   - num_epochs: 100
   - lr: 1e-3
   - embed_dim: 128
-  - hidden_dim: 256
+  - hidden_dim: 512
   - num_layers: 2
   - dropout: 0.2
   - batch_size: 32
@@ -94,11 +94,11 @@ Parameters:
   - lr_patience: 5
 
 Generation Results (More in results folder)
-  - Temperature:
-  - Validity Rate:
-  - Uniqueness Rate:
-  - Novelty Rate:
-  - Scaffold Novelty Rate:
-  - Scaffold Holdout Rate:
-  - Mean QED:
-  - Median QED:
+  - Temperature: 1
+  - Validity Rate: 0.9728
+  - Uniqueness Rate: 0.995888
+  - Novelty Rate: 0.995888
+  - Scaffold Novelty Rate: 0.557360
+  - Scaffold Holdout Rate: 0.066201
+  - Mean QED: 0.732084
+  - Median QED: 0.762720
